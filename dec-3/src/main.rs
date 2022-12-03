@@ -11,7 +11,21 @@ fn main() {
     let contents = fs::read_to_string(file_path)
                     .expect(&format!("Cannot find file {}", file_path));
 
-    let mut total = 0;
+    let lines = contents.lines().collect::<Vec<&str>>();
+    let mut total = 0;   
+    let mut i = 0; 
+    while i < lines.len() {
+        let c = get_common_char(&lines[i..(i+3)]);
+        let val = get_char_value(c);
+        println!("{}:{}", c, val);
+        total += val;
+        i += 3;
+    }
+
+    println!("Total values of badges: {}", total);
+
+    //leftover code from Problem 1
+    /*
     for line in contents.lines() {
         let c = get_common_char(line);
         let val = get_char_value(c);
@@ -20,8 +34,11 @@ fn main() {
     }
 
     println!("Total priorities of misplaced items: {}", total);
+    */
 }
 
+// Different implementation from Problem 1
+/*
 fn get_common_char(line: &str) -> char {
     println!("{}", line);
     
@@ -34,6 +51,21 @@ fn get_common_char(line: &str) -> char {
     }
 
     panic!("no matching char found.")
+}
+*/
+
+// Different implementation for Problem 2
+fn get_common_char(lines: &[&str]) -> char {
+    println!("slice length: {}", lines.len());
+    
+    for i in 0..lines[0].len() {
+        let current = lines[0].chars().nth(i).unwrap();
+        if lines[1].contains(current) && lines[2].contains(current) {
+            return current;
+        }
+    }
+
+    panic!("Found no common character in the three strings.")
 }
 
 fn get_char_value(c: char) -> u32 {
