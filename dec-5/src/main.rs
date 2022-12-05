@@ -16,7 +16,7 @@ fn main() {
     let results = parse_file(&contents.lines().collect());
     let mut stacks = results.0;
 
-    perform_moves(&results.1, &mut stacks);
+    perform_moves2(&results.1, &mut stacks);
 
     for i in 0..stacks.len() {
         print_stack(i, &stacks[i]);
@@ -130,6 +130,20 @@ fn perform_moves(moves: &Vec<Move>, stacks: &mut Vec<VecDeque<char>>) {
     for m in moves {
         for _ in 0..m.num {
             let val = stacks[m.source - 1].pop_front().unwrap();
+            stacks[m.target - 1].push_front(val);
+        }
+    }
+}
+
+// Only think different in problem 2 is this.
+fn perform_moves2(moves: &Vec<Move>, stacks: &mut Vec<VecDeque<char>>) {
+    for m in moves {
+        let mut temp_stack = VecDeque::<char>::new();
+        for _ in 0..m.num {
+            temp_stack.push_back(stacks[m.source - 1].pop_front().unwrap());
+        }
+        for _ in 0..m.num {
+            let val = temp_stack.pop_back().unwrap();
             stacks[m.target - 1].push_front(val);
         }
     }
