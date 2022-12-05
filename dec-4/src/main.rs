@@ -16,7 +16,8 @@ fn main() {
     for line in contents.lines() {
         let areas = parse_line(line);
 
-        total+= contains_areas(areas.0, areas.1);
+        //total+= contains_areas(areas.0, areas.1);
+        total += overlaps_areas(areas.0, areas.1);
     }
     println!("Total overlaps: {}", total);
 }
@@ -46,4 +47,19 @@ fn contains_areas(area1: HashSet<i32>, area2: HashSet<i32>) -> i32 {
         }
     }
     return 0;
+}
+
+fn overlaps_areas(area1: HashSet<i32>, area2: HashSet<i32>) -> i32 {
+    if area1.len() >= area2.len() {
+        if area1.intersection(&area2).collect::<Vec<&i32>>().len() > 0 { 
+            return 1;
+        }
+    }
+    else
+    {
+        if area2.intersection(&area1).collect::<Vec<&i32>>().len() > 0 {
+            return 1;
+        }
+    }
+    0
 }
