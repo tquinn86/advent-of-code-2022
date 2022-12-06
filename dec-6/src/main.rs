@@ -13,14 +13,16 @@ fn main() {
     
     //this one is different. Instead of looping through lines, we're just dealing with a single
     //long string.
-    //the full input looks like it has line breaks in it, we'll just ignore them
 
     println!("{}", contents);
 
     let chars : Vec<char> = contents.chars().collect();
     'char_iter: for i in 0..chars.len() {
         let mut temp = String::new();
-        for j in 0..4 {
+        //Part 1
+        //for j in 0..4 {
+        //Part 2 looks for 14 chars
+        for j in 0..14 {
             let c = chars[i + j];
             if ! temp.contains(c) {
                 temp.push(c);
@@ -28,7 +30,10 @@ fn main() {
                 continue 'char_iter;
             }
         }
-        println!( "First non-repeating 4 char block ends at {}", i + 4);
+        //Part 1
+        //println!( "First non-repeating 4 char block ends at {}", i + 4);
+        //Part 2
+        println!( "First non-repeating 14 char block ends at {}", i + 14);
         break;
     }
 }

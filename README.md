@@ -41,3 +41,8 @@ Easy one today, problem 2 was an easier version of problem one, just had to chan
 
 This one was pretty tricky. First, parsing of the input was divided into two distinct sections, and the first section simulates a physical, vertical, layout of crates in stacks, so translating that from horizontal lines was interesting. As I said, there were stacks, so using a `stack` data structure made sense. Closest thing in the Rust standard lib is `VecDeque` which is a double-ended (de) queue (que) which can work like either a stack (LIFO) or a queue (FIFO) or any combination. This turned out to be useful in problem 2. Most of the work in problem 1 was the parsing. Once I parsed the stacks into `VecDeque`s and then pulled the Moves into a little struct, performing the moves was fairly straigtforward. Problem 2 was just changing some ordering, and, as I said, the double-ended-ness of the `VecDeque` came in handy. See `peform_moves` and `perform_moves2` to see the difference.
 
+## Day 6: 12/6/2022
+
+[Problem](https://adventofcode.com/2022/day/6) [Answer](dec-6/)
+
+Pretty easy today. Whole thing in 40 lines of code. A nested loop over a `String` and used the loop label feature to pop out of the inner. Had to change two lines of code for Part 2.
