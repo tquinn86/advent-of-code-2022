@@ -47,7 +47,9 @@ This one was pretty tricky. First, parsing of the input was divided into two dis
 
 Pretty easy today. Whole thing in 40 lines of code. A nested loop over a `String` and used the loop label feature to pop out of the inner. Had to change two lines of code for Part 2.
 
-## Day 6: 12/7/2022 - 12/9/2022
+## Day 7: 12/7/2022 - 12/9/2022
+
+[Problem](https://adventofcode.com/2022/day/7) [Answer](dec-7/)
 
 Well, that was a journey. Capturing my thoughts after part 1, because, well, it took me 2+ days to get to the right answer. The good news is I learned a lot about Rust, which is the point. People talk about "Idiomatic Rust", I think the correct phrase should be "Ideosycratic Rust". But I digress.
 
@@ -127,3 +129,9 @@ In C and especially C++ it is clear from the variable declaration whether it is 
 Modern C++ arose when the notion of "smart pointers" were introduced along with the general concept of RAII (which is short and for *R*esource *A*cquisition *i*s *I*nitialization). Someone (I probably should know who) came up with the nifty idea that they can create a simple class that wraps a pointer of a given type, and automatically deletes it when it goes out of scope. The smart pointer is _itself_ a stack variable, that wraps a heap variable, and automatically calls `delete` on the heap object when the stack variable goes our of scope, in its own destructor. This innovation meant that programmers almost _never_ had to call delete, explicitly, anymore, greatly simplifying memory management in C++ programs. And since smart pointers are stack variables, they tended to be passed by reference rather than passing pointers by value, significantly changing the way Modern C++ looked when compared to the C++ I wrote when I was getting started. Basically a lot more `&`s and a lot fewer `*`s.
 
 Anyway, this reminiscence made me realize I had glossed over these fundamentals in Rust. I did not know what was on the stack and what was on the heap!?!? Which essentially meant I did not know what I was doing. So, I started doing some research, found a chapter on stack vs. heap in Rust and found out that _everything_ is stack based by default, and if you wanted to use the heap, you needed to use a smart pointer, like `Box<>`. There it was again. OK, things are clicking now. I re-read the chapter on "Ownership" in the Rust book (that I had only glossed over before) and realized that RAII is a built-in concept. I read -- for the first time -- the chapter on smart pointers, and now the whole error about the Copy trait is actually making sense. Hopefully, things will go easier now...
+
+## Day 8: 12/8/2022 - 12/10/2022
+
+[Problem](https://adventofcode.com/2022/day/8) [Answer](dec-8/)
+
+This one went much quicker. Both problems were solved with a vector of vectors forming a grid. The logic was a little tricky, but it was fun, and less stressful. It is the weekend now, but because I was still figuring things out from above -- and well, I have a life, I only managed to get this one done today. So still two days behind, and I'll be another day behind at midnight tonight, so 3 days worth tomorrow? We'll see.
