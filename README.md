@@ -130,6 +130,162 @@ Modern C++ arose when the notion of "smart pointers" were introduced along with 
 
 Anyway, this reminiscence made me realize I had glossed over these fundamentals in Rust. I did not know what was on the stack and what was on the heap!?!? Which essentially meant I did not know what I was doing. So, I started doing some research, found a chapter on stack vs. heap in Rust and found out that _everything_ is stack based by default, and if you wanted to use the heap, you needed to use a smart pointer, like `Box<>`. There it was again. OK, things are clicking now. I re-read the chapter on "Ownership" in the Rust book (that I had only glossed over before) and realized that RAII is a built-in concept. I read -- for the first time -- the chapter on smart pointers, and now the whole error about the Copy trait is actually making sense. Hopefully, things will go easier now...
 
+## Day 5 and 6
+
+Seriously, I'm going to make myself crazy with this. I sat down yesterday I fully intended to bang through the AoC problems I hadn't gotten to yet. I even read through the first one and thought about this implementation, but was drawn back to the [Rust book](https://doc.rust-lang.org/book) and I kept reading about Traits, Lifetimes, Smart Pointers, etc. to make sure I was actually getting it. As I was reading I was thinking: "I bet I could do a much better job on that tree problem if I started over. I may even try doing it with an enum and a trait to see which works better..." And as I kept reading (RTFM!!!) I ran across an example in [chapter 15](https://doc.rust-lang.org/book/ch15-06-reference-cycles.html) of creating a tree. How about that.
+
+In the example they define the "Node" type thus:
+
+```Rust
+struct Node {
+    value: i32,
+    parent: RefCell<Weak<Node>>,
+    children: RefCell<Vec<Rc<Node>>>,
+}
+```
+
+This is very close to what I want, but the types of the fields are super complicated. Children are a RefCell of a Vector of an Ref-counted Node. and the parent is a RefCell of a weak reference to Node. In [one of the articles](https://rust-leipzig.github.io/architecture/2016/12/20/idiomatic-trees-in-rust/) linked above the author dismissively describes something close to this as an example of something they consider ridiculous:
+
+```Rust
+struct Node<T> {
+    previous: Rc<RefCell<Box<Node<T>>>>,
+// -- snip --
+}
+```
+
+So, I wanted to understand if all of these nested types are necessary and why. And if that is even good practice.
+
+My first attempt is based on the Item enum that I finished with above. In my node type, the children are owned by the node and the parent is an immutable reference, if set. So I started with this definition for the `DirType` associated with the `Dir` variant of my `Item` enum:
+
+```Rust
+pub struct DirItem {
+    name: String,
+    parent: Option<&Item>,
+    items: Vec<Item>
+}
+```
+
+I immediately get the compiler telling me I need lifetime annotations because of the `&Item` in parent. This is expected, so I add `<'a>` in about a dozen place throughout the file and DirItem now looks like this:
+
+```Rust
+pub struct DirItem<'a> {
+    name: String,
+    parent: Option<&'a Item<'a>>,
+    items: Vec<Item<'a>>
+}
+```
+
+Now I get the following compile errors from my `add_child` method on `Item`:
+
+```
+error[E0594]: cannot assign to `dir.parent`, which is behind a `&` reference
+  --> src/items_enum/mod.rs:32:17
+   |
+32 |                 dir.parent = Some(self);
+   |                 ^^^^^^^^^^^^^^^^^^^^^^^ `dir` is a `&` reference, so the data it refers to cannot be written
+
+error[E0596]: cannot borrow `dir.items` as mutable, as it is behind a `&` reference
+  --> src/items_enum/mod.rs:33:17
+   |
+33 |                 dir.items.push(*item);
+   |                 ^^^^^^^^^^^^^^^^^^^^^ `dir` is a `&` reference, so the data it refers to cannot be borrowed as mutable
+
+error[E0507]: cannot move out of `*item` which is behind a shared reference
+  --> src/items_enum/mod.rs:33:32
+   |
+33 |                 dir.items.push(*item);
+   |                                ^^^^^ move occurs because `*item` has type `Item<'_>`, which does not implement the `Copy` trait
+```
+
+I tried solving the first two by changing the `&self` to `&'a mut self` but then had multiple immutable borrows which are disallowed by the borrow checker. But I knew I wouldn't be able to get around the third problem anyway. I needed the Item to be in a Smart Pointer of some type so ownership could be moved. Let's try `Box<Item>`.
+
+```Rust
+pub struct DirItem<'a> {
+    name: String,
+    parent: Option<&'a Item<'a>>,
+    items: Vec<Box<Item<'a>>>
+}
+```
+
+Ok, same compile errors. Turns out Box can't be copied, but it can be `clone`d. I tried that, but the cloned object does not adhere to the lifetime constraints. Plus it is trying to do a deep copy, which is not what I want. This isn't working. Let's take the book's suggestion and go with `Rc` instead. That will also allow me to use `Weak` for the parent pointer -- an unowned reference -- which is just what I want. And that should allow me to get rid of the lifetime annotations as well.
+
+```Rust
+pub struct DirItem {
+    name: String,
+    parent: Weak<Item>, 
+    items: Vec<Rc<Item>>
+}
+```
+
+After fooling around with function signatures and `**self` in a `match` statement, I kept getting the "error[E0594]: cannot assign to `dir.parent`, which is behind a `&` reference" errors as above. Hmm, seems like I need interior mutability. Guess I need that `RefCell` after all.
+
+```Rust
+pub struct DirItem {
+    name: String,
+    parent: RefCell<Weak<Item>>,
+    items: RefCell<Vec<Rc<Item>>>
+}
+```
+
+Whadddya know, it compiles. Let's see if it runs.
+
+Ok, it took a while to get the indirections correct. Some cases of `&**self` to get at the right piece of data. But it builds a tree and gets the directory sizes recursively, like I wanted from the start. Unfortuntely, it turned out that having a flat list of directories was more conducive to solving this particular set of problems, so I ended up adding a `flatten_dirs` method to Item to pull out that flat list. This works recursively, too.
+
+Anyway, it spits out the right answers.
+
+Now, I'm going to try doing it with a `trait` and see how that works.
+
+Well, `trait`s are a surprising amount of trouble. It was going smoothly but I could not downcast from `Rc<dyn Item>` to `Rc<Dir>` like I wanted to in some situations. I managed to get everything to compile using just `Rc<dyn Item>` but my
+implementation of `flatten_dirs` from the previous version won't work with `Item` because I can't pass it via `self: Rc<dyn Item>` in a trait. So I can build the tree, but using it is causing difficulties. I'm going to have to traverse it differently.
+
+I changed `flatten_dirs` to an associated method so I could preserve the `&Rc<dyn Item>` and that worked. The trait and structs look like this:
+
+```Rust
+pub trait Item: Display {
+    fn name(&self) -> &str;
+    fn size(&self) -> usize;
+    fn is_dir(&self) -> bool;
+    fn as_any(&self) -> &dyn Any;
+}
+
+pub struct Dir {
+    name: String,
+    parent: RefCell<Weak<dyn Item>>,
+    items: RefCell<Vec<Rc<dyn Item>>>
+}
+
+pub struct File {
+    name: String,
+    parent: RefCell<Weak<dyn Item>>,
+    size: usize
+}
+```
+
+The `as_any()` is there so I can get to a `Dir` instance from a `Rc<dyn Item>`. As noted I can't get to a `Rc<Dir>` and preserve the `Rc`-ness, but I can unwrap it by going jumping through some hoops. Example line of code (from `flatten_dirs`):
+
+```Rust
+for item in &*tree.as_any().downcast_ref::<Dir>().unwrap().items.borrow() {
+    // -- snip --
+}
+```
+
+The `tree` is `&Rc<dyn Item>`. `as_any()` returns a `&dyn Any`, `downcast_ref` returns `Option<T>` with `T = Dir`, so we unwrap that and go from there. Not pretty but it works.
+
+Once I worked through the ideosyncracies (there's that word again), I think the `trait` version is slightly better? Less code, fewer `match` statements. Sprinking `dyn` everywhere is a tad annoying, but all in all not that big of a deal.
+
+The question I asked above is still relevant though: Is it even a good practice to have all of these nested generics? I'm not sure. The language and its ideosyncracies certainly push you towards that, but there seems to be some consternation in the community as large as well. We could define type aliases for some of the more complicated ones: 
+
+```Rust
+pub type ItemVec = RefCell<Vec<Rc<dyn Item>>>;
+```
+
+And I can understand the urge to "break into jail" and use `unsafe` code to avoid some of the rigamarole. But in the end, it is possible to do this using pure, safe Rust.
+
+See the new implementation [here](dec-7-2/). The two different implementations are in the `items_enum` and `items_trait` modules respectively. Just comment out the use statements of the one you don't want to use.
+
+
+
+
 ## Day 8: 12/8/2022 - 12/10/2022
 
 [Problem](https://adventofcode.com/2022/day/8) [Answer](dec-8/)

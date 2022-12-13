@@ -1,0 +1,83 @@
+use crate::items_enum::*;
+use std::rc::Rc;
+
+pub fn parse_commands(contents: &String) -> Rc<Item> {
+    
+    let lines: Vec<&str> = contents.lines().collect();
+    let mut cur_dir: Rc<Item>;
+    if lines[0] == "$ cd /" {
+        cur_dir = Rc::new(Item::Dir(DirItem::new("/".to_string())));
+    } else {
+        panic!("First line is not root!")
+    }
+
+    //keep another reference around to return
+    let root = cur_dir.clone();
+    for line in &lines[1..] {
+        if line.starts_with("$") {
+            cur_dir = parse_command(line, &cur_dir);
+        } else {
+            parse_item(line, &cur_dir);
+        }
+    }
+
+    root
+}
+
+fn parse_command(line: &str, cur_dir: &Rc<Item>) -> Rc<Item> {
+    println!("in parse command: {}", line);
+
+        if !line.starts_with("$") {
+            panic!("Not a command");
+        }
+
+        let parts = line.split(" ").collect::<Vec<&str>>();
+        if parts[1] == "cd" {
+            return parse_cd(parts[2], cur_dir);
+        } else if parts[1] == "ls" {
+            //do nothing
+            println!("Starting ls.");
+            return cur_dir.clone();
+        } else {
+            panic!("what?")
+        }
+}
+
+fn parse_cd(dir_name: &str, cur_dir: &Rc<Item>) -> Rc<Item> {
+    println!("In parse_cd");
+    if dir_name == ".." {
+        println!("popping up");
+        return match &**cur_dir {
+            Item::Dir(di) => di.parent.borrow().upgrade().unwrap(),
+            _ => panic!("Not a directory!")
+        }
+    } else {
+
+        //it should be a subdir already
+        let opt_dir = cur_dir.find_sub_dir(dir_name);
+
+        if opt_dir.is_some() {
+            println!("Found dir: {}", dir_name);
+            opt_dir.unwrap()
+        } else {
+            println!("Dir {} not found!", dir_name);
+            panic!("Should have found it.")
+        }
+    }
+}
+
+
+fn parse_item(line: &str, cur_dir: &Rc<Item>) {
+    println!("{}", line);
+    
+    let parts = line.split(" ").collect::<Vec<&str>>();
+    let new_item: Rc<Item>;
+    if parts[0] == "dir" {
+        new_item = Rc::new(Item::Dir(DirItem::new(parts[1].to_string())));
+    } else {
+        let size = parts[0].parse::<usize>().unwrap();
+        new_item = Rc::new(Item::File(FileItem::new(parts[1].to_string(), size)));
+    }
+
+    cur_dir.add_child(&new_item);
+}
