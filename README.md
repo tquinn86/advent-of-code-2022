@@ -283,11 +283,16 @@ And I can understand the urge to "break into jail" and use `unsafe` code to avoi
 
 See the new implementation [here](dec-7-2/). The two different implementations are in the `items_enum` and `items_trait` modules respectively. Just comment out the use statements of the one you don't want to use.
 
-
-
-
 ## Day 8: 12/8/2022 - 12/10/2022
 
 [Problem](https://adventofcode.com/2022/day/8) [Answer](dec-8/)
 
 This one went much quicker. Both problems were solved with a vector of vectors forming a grid. The logic was a little tricky, but it was fun, and less stressful. It is the weekend now, but because I was still figuring things out from above -- and well, I have a life, I only managed to get this one done today. So still two days behind, and I'll be another day behind at midnight tonight, so 3 days worth tomorrow? We'll see.
+
+## Day 9: 12/9/2922 - 12/13/2022
+
+[Problem](https://adventofcode.com/2022/day/9) [Answer](dec-9/)
+
+As you can see, I got humg up on Day 7 again, so this is the Day 9 problem, completed on the 13th. Getting farther behind, but maybe I can catch up over the next day or two. I got through part 1 pretty quickly. I pulled over the `Position` type I used in Day 8. Put that in a `Rope` type to track the head and tail of the rope around the board. Nothing too tricky. Note I deliberately added `#[derive(Copy, Clone, ...)]` to the Position type to make it copyable and able to be passed by value. That came in particularly handy during part 2. I stored positions in a HashMap to keep track of the history (which is necessary to get the answer), which meant also adding `#[derive(Eq, ParialEq, Hash)]` to the mix. It is a simple struct so the default implementations of these traits come in handly. I added `#[derive(Default)]` for good measure to make initialization of the `Rope` easy.
+
+Anyway, as I said, got through part1 fairly quickly. I struggled with the logic on part2. Eventually I figured out that I was moving laterally too far on the diagonal. This logic worked when there were only 2 knots but not with n. The second part basically lengthen's the rope from two segments to 10, so the part2 `Rope` is more generic version than part1. For this problem, I separated the parts into to separate functions, and separated the supporting types into two separate modules, so you can mix and match. I made sure the part2 types would solve the part1 problem if you start with `let r = Rope::new(2)`. Because it is so divided, only one tag today. I'll try to keep doing it this way going forward.
