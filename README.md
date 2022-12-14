@@ -296,3 +296,13 @@ This one went much quicker. Both problems were solved with a vector of vectors f
 As you can see, I got humg up on Day 7 again, so this is the Day 9 problem, completed on the 13th. Getting farther behind, but maybe I can catch up over the next day or two. I got through part 1 pretty quickly. I pulled over the `Position` type I used in Day 8. Put that in a `Rope` type to track the head and tail of the rope around the board. Nothing too tricky. Note I deliberately added `#[derive(Copy, Clone, ...)]` to the Position type to make it copyable and able to be passed by value. That came in particularly handy during part 2. I stored positions in a HashMap to keep track of the history (which is necessary to get the answer), which meant also adding `#[derive(Eq, ParialEq, Hash)]` to the mix. It is a simple struct so the default implementations of these traits come in handly. I added `#[derive(Default)]` for good measure to make initialization of the `Rope` easy.
 
 Anyway, as I said, got through part1 fairly quickly. I struggled with the logic on part2. Eventually I figured out that I was moving laterally too far on the diagonal. This logic worked when there were only 2 knots but not with n. The second part basically lengthen's the rope from two segments to 10, so the part2 `Rope` is more generic version than part1. For this problem, I separated the parts into to separate functions, and separated the supporting types into two separate modules, so you can mix and match. I made sure the part2 types would solve the part1 problem if you start with `let r = Rope::new(2)`. Because it is so divided, only one tag today. I'll try to keep doing it this way going forward.
+
+## Day 10: 12/10/2922 - 12/14/2022
+
+[Problem](https://adventofcode.com/2022/day/10) [Answer](dec-10/)
+
+Catching up a little bit. Finished part one last night and part 2 this morning. This was fun one, especially part two. You had to decode the input such that it output chars in a grid that outlined eight capital letters that were the answer.
+
+Part 1 was simple enough, I did it all in loop, without any supporting types. In part 2 I added a simple `Sprite` type to deal with encapsulating some of the logic, but the same loop structure worked. In both cases I used a closure that was called from a couple points in the main loop to deal with state. First time I've used closures -- of my own -- in Rust (`map` takes a closure, and I've used that several times).
+
+As with yesteday, the two parts are cleanly separated, so a single tag.
