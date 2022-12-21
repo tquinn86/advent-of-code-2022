@@ -5,11 +5,14 @@ pub enum PairType {
 
 impl PairType {
     fn parse_array(line: &str) -> PairType {
-        if line.len() > 0 {
-            PairType::Arr(vec![])
-        } else {
-            //empty vec is a thing
-            PairType::Arr(vec![])
+        //we're parsing an array, the length better be > 0
+        //and the first char should be [
+        if line.len() == 0 || line.chars().nth(0).unwrap() != '[' {
+            panic("Invalid array: {}", line);
         }
+        
+        let contents: Vec<PairType> = vec![];
+
+        PairType::Arr(contents)
     }
 }
