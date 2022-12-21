@@ -20,5 +20,15 @@ fn main() {
 }
 
 fn part1(contents: &String) {
-    
+
+    use crate::part1::PairType;
+
+    let lines: Vec<&str> = contents.lines().collect();
+
+    let mut i = 0;
+    while i < lines.len() {
+        let p1 = PairType::parse_array(&lines[i]);
+        let p2 = PairType::parse_array(&lines[i + 1]);
+        i = i + 3
+    }
 }
