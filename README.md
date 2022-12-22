@@ -353,7 +353,7 @@ So to get the answer, after building the tree, you go to the end node and traver
 
 Part 2 is the same as part 1 except instead of having a single starting node, we need to find the 'a' node with the shortest path to 'E'. So, I imagine there is a more memory efficent way of doing this, but since I had all of the logic already, I simply looped through the grid looking for 'a's. If I find one, I clone the grid, build a tree from that starting point, and get the distance. I collect the distances that are valid (some starting points don't make it to E), and return the smallest number.
 
-## Day 12: 12/13/2922 - 12/22/2022
+## Day 13: 12/13/2922 - 12/22/2022
 
 [Problem](https://adventofcode.com/2022/day/13) [Answer](dec-13/)
 
