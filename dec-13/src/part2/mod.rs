@@ -2,13 +2,13 @@ use std::fmt;
 use std::fmt::Display;
 use std::cmp::Ordering;
 
-pub enum PairType {
+pub enum PacketType {
     Int(i32),
-    Arr(Vec<PairType>)
+    Arr(Vec<PacketType>)
 }
 
-impl PairType {
-    pub fn parse_array(line: &str) -> (usize, PairType) {
+impl PacketType {
+    pub fn parse_array(line: &str) -> (usize, PacketType) {
         //println!("{}", line);
         // collect the chars into a vec:
         let chars: Vec<(usize, char)> = line.char_indices().collect();
@@ -18,7 +18,7 @@ impl PairType {
             panic!("Invalid array: {}", line);
         }
 
-        let mut contents: Vec<PairType> = vec![];
+        let mut contents: Vec<PacketType> = vec![];
         let mut i = 1;
         while i < chars.len() {
             if chars[i].1 == '[' {
@@ -38,24 +38,24 @@ impl PairType {
                 i += result.0;
             }
         }
-        (i, PairType::Arr(contents))
+        (i, PacketType::Arr(contents))
     }
 
     pub fn is_arr(&self) -> bool {
         match self {
-            PairType::Arr(_) => true,
+            PacketType::Arr(_) => true,
             _ => false
         }
     }
 
     pub fn is_int(&self) -> bool {
         match self {
-            PairType::Int(_) => true,
+            PacketType::Int(_) => true,
             _ => false
         }
     }
 
-    fn parse_int(line: &str) -> (usize, PairType) {
+    fn parse_int(line: &str) -> (usize, PacketType) {
         //println!("{}", line);
         let chars: Vec<(usize, char)> = line.char_indices().collect();
         //we're parsing an int, the length better be > 0
@@ -76,27 +76,27 @@ impl PairType {
             }
             i += 1;
         }
-        (i, PairType::Int(number.parse::<i32>().unwrap()))
+        (i, PacketType::Int(number.parse::<i32>().unwrap()))
     }
 
     //comparisons of Int and Arr need to turn
     //Ints into Arrs so helper to do just that
     fn into_arr(&self) -> Self {
-        if let PairType::Int(iself) = self {
-            let v = vec![PairType::Int(*iself)];
-            PairType::Arr(v)
+        if let PacketType::Int(iself) = self {
+            let v = vec![PacketType::Int(*iself)];
+            PacketType::Arr(v)
         }
         else{
-            panic!("This method only works for PairType::Int");
+            panic!("This method only works for PacketType::Int");
         }
     }
 }
 
-impl Display for PairType {
+impl Display for PacketType {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            PairType::Int(i) => write!(f, "{}", i),
-            PairType::Arr(c) => {
+            PacketType::Int(i) => write!(f, "{}", i),
+            PacketType::Arr(c) => {
                 let mut i = 0;
                 let mut res = write!(f, "[");
                 if res.is_err() { return res; }
@@ -116,11 +116,11 @@ impl Display for PairType {
     }
 }
 
-impl PartialEq for PairType {
-    fn eq(&self, other: &PairType) -> bool {
+impl PartialEq for PacketType {
+    fn eq(&self, other: &PacketType) -> bool {
         match self {
-            PairType::Int(iself) => {
-                if let PairType::Int(iother) = other {
+            PacketType::Int(iself) => {
+                if let PacketType::Int(iother) = other {
                     return iself == iother;
                 } else {
                     //turn self into an Arr and compare
@@ -129,8 +129,8 @@ impl PartialEq for PairType {
                     return aself == *other;
                 }
             },
-            PairType::Arr(aself) => {
-                if let PairType::Arr(aother) = other {
+            PacketType::Arr(aself) => {
+                if let PacketType::Arr(aother) = other {
                     if aself.len() == aother.len() {
                         //call this recursively on each item
                         for i in 0..aself.len() {
@@ -152,34 +152,41 @@ impl PartialEq for PairType {
     }
 }
 
-impl PartialOrd for PairType {
-    fn partial_cmp(&self, other: &PairType) -> Option<Ordering> {
+impl Eq for PacketType {}
+
+impl PartialOrd for PacketType {
+    fn partial_cmp(&self, other: &PacketType) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+impl Ord for PacketType {
+    fn cmp(&self, other: &PacketType) -> Ordering {
         match self {
-            PairType::Int(iself) => {
-                if let PairType::Int(iother) = other {
-                    return Some(iself.cmp(iother));
+            PacketType::Int(iself) => {
+                if let PacketType::Int(iother) = other {
+                    return iself.cmp(iother);
                 } else {
                     //make iself into a Arr and compare recursively
                     let aself = self.into_arr();
-                    return aself.partial_cmp(other);
+                    return aself.cmp(other);
                 }
             },
-            PairType::Arr(aself) => {
-                if let PairType::Arr(aother) = other {
+            PacketType::Arr(aself) => {
+                if let PacketType::Arr(aother) = other {
                     let mut i_max = aself.len();
-                    let mut tentative_order = Some(Ordering::Equal);
+                    let mut tentative_order = Ordering::Equal;
                     if aself.len() > aother.len() {
-                        tentative_order = Some(Ordering::Greater);
+                        tentative_order = Ordering::Greater;
                         i_max = aother.len();
                     } else if aother.len() > aself.len() {
-                        tentative_order = Some(Ordering::Less);
+                        tentative_order = Ordering::Less;
                     }
 
                     //now loop through, if we find unequal values,
                     //return that, otherwise keep going.
                     for i in 0..i_max {
-                        let res = aself[i].partial_cmp(&aother[i]);
-                        if res != Some(Ordering::Equal) {
+                        let res = aself[i].cmp(&aother[i]);
+                        if res != Ordering::Equal {
                             return res;
                         }
                     }
@@ -187,7 +194,7 @@ impl PartialOrd for PairType {
                 } else {
                     //convert other into an Arr and call recursively
                     let aother = other.into_arr();
-                    self.partial_cmp(&aother)
+                    self.cmp(&aother)
                 }
             }
         }

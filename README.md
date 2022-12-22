@@ -333,12 +333,41 @@ Lo and behold: this worked! Turned out I was using something called the `Chinese
 
 Will I catch up? Between all of the stuff going on this time of year and work, I don't know. I mean eventually I will if I don't get bored with it, but it is looking unlikely I'll finish day 25 on the 25th.
 
-## Day 11: 12/11/2922 - 12/21/2022
+## Day 12: 12/12/2922 - 12/21/2022
+
+[Problem](https://adventofcode.com/2022/day/12) [Answer](dec-12/)
 
 Still plugging away, but there is not time enough in the day -- at this time of year -- to spend enough time on these, as they get more difficult. I'll catch up eventually.
 
-Anyway, today is a "shortest path" day which tells us "Breadth First Search". We have a grid, and we need to build a breadth-first tree out of it to find the shortest path from the node marked S to the node marked S. So, I'm using a combination of the things I learned on day 7. Each node has an x,y position in the grid. So I'm putting each node in a HashMap keyed by position, contained in a `Grid` type, so using the Arena pattern with a `HashMap `instead of a `Vec`tor I also record the start position, end position and the maximum position for this grid (example grid and real grid are very different sizes...). The values in the HashMap are `RefCell<Box<Node>>`. I needed `RefCell` to change the parent and children of each node as I build the tree. Anyway, then it is just a matter of starting from start, finding all valid children (up, down, left, right: on the grid, and traversable by the rules [lower, equal, or no more than one higher]) that we haven't seen yet. If we've seen it already, it is somewhere higher in the tree. We mark each valid child node as visited, set it as a child of the current node, and crucially, set its parent to the current node. In BFS each child can only have one parent, and that is the shortest path.
+Anyway, today is a "shortest path" day which tells us "Breadth First Search". We have a grid, and we need to build a breadth-first tree out of it to find the shortest path from the node marked S to the node marked E. 
+
+So, I'm using a combination of the things I learned on day 7. Each node has an x,y position in the grid. So I'm putting each node in a HashMap keyed by position, contained in a `Grid` type, so using the Arena pattern with a `HashMap `instead of a `Vec`tor I also record the start position, end position and the maximum position for this grid (example grid and real grid are very different sizes...). 
+
+As we know, there are two great problems of software engineering: Naming, Caching, and Off-by-one errors. I'll admit to stuggling with the BFS implementation, and my first try was riddled with off-by-one errors. I was trying to be too clever by half as the say. I wanted to do it in one pass, and I was using recursion. The first try wasn't terribly off from what I ended up with, but because of borrowing restrictions in Rust, I could not re-use a node I've already seen on the current path. The example input returned the right number, but the real input was about 100 off as it turned out.
+
+I rewote the thing, starting from the end, going to the front. Again, it was recursive, and again the answer was off. This time by even more. I took a break, thought it through and came up with the non-recursive algorithm that worked.
+
+The values in the HashMap are `RefCell<Box<Node>>`. I had used RefCell for the previous two tries because it was necessary for the recursion. It occured to me I might not need it with the current implementation. I tried to remove it but I needed `RefCell` to change the parent and children of each node as I build the tree. Anyway, then it is just a matter of starting from start, finding all valid children (up, down, left, right: on the grid, and traversable by the rules [lower, equal, or no more than one higher]) that we haven't seen yet. If we've seen it already, it is somewhere higher in the tree. We mark each valid child node as visited, set it as a child of the current node, and crucially, set its parent to the current node. In BFS each child can only have one parent, and that is the shortest path.
 
 So to get the answer, after building the tree, you go to the end node and traverse its parents until you reach a node without a parent (the start node) and count them up. Done.
 
 Part 2 is the same as part 1 except instead of having a single starting node, we need to find the 'a' node with the shortest path to 'E'. So, I imagine there is a more memory efficent way of doing this, but since I had all of the logic already, I simply looped through the grid looking for 'a's. If I find one, I clone the grid, build a tree from that starting point, and get the distance. I collect the distances that are valid (some starting points don't make it to E), and return the smallest number.
+
+## Day 12: 12/13/2922 - 12/22/2022
+
+[Problem](https://adventofcode.com/2022/day/13) [Answer](dec-13/)
+
+This one was not too bad. It was basically arbitrary arrays of arrays of ints. To make this work with `Vec`tors, I had to define a recursive enum:
+
+```Rust
+pub enum PairType {
+    Int(i32),
+    Arr(Vec<PairType>)
+}
+```
+
+I needed it to be orderable, so implemented the `PartialOrd` trait on the type, according to the rules, and that was basically it. The `<` operator did the work, and I got to the answer.
+
+In part 2, I thought I could just re-use the types from part one, pull all of the lines into a `Vec` and sort it. Turned out `Vec.sort()` requires `Ord` not `PartialOrd` (makes sense) so I had more work to do. I copypasta-ed the types to part2 and added the missing implementation (which was a total of four new lines, plus removing some `Some`s). I took advantage of the copy to change the name of `PairType` to `PackeType` since it was no longer part of a pair. I guess I could have just named it `Packet`...
+
+Anyway the sort worked as expected and the answer was right on the first try.
