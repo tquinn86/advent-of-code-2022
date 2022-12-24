@@ -368,6 +368,12 @@ pub enum PairType {
 
 I needed it to be orderable, so implemented the `PartialOrd` trait on the type, according to the rules, and that was basically it. The `<` operator did the work, and I got to the answer.
 
-In part 2, I thought I could just re-use the types from part one, pull all of the lines into a `Vec` and sort it. Turned out `Vec.sort()` requires `Ord` not `PartialOrd` (makes sense) so I had more work to do. I copypasta-ed the types to part2 and added the missing implementation (which was a total of four new lines, plus removing some `Some`s). I took advantage of the copy to change the name of `PairType` to `PackeType` since it was no longer part of a pair. I guess I could have just named it `Packet`...
+In part 2, I thought I could just re-use the types from part one, pull all of the lines into a `Vec` and sort it. Turned out `Vec.sort()` requires `Ord` not `PartialOrd` (makes sense) so I had more work to do. I copypasta-ed the types to part2 and added the missing implementation (which was a total of four new lines, plus removing some `Some`s). I took advantage of the copy to change the name of `PairType` to `PacketType` since it was no longer part of a pair. I guess I could have just named it `Packet`...
 
 Anyway the sort worked as expected and the answer was right on the first try.
+
+## Day 14: 12/14/2922 - 12/24/2022
+
+[Problem](https://adventofcode.com/2022/day/14) [Answer](dec-14/)
+
+That one was fun, and not too difficult. Basically you build a packinko like structure from the input and start dropping balls into it and see where they land based on  specific rules. A few nested loops and that was that. Part 1 you dropped balls (well, sand pebbles) until they start falling into oblivion, in part 2 we build a floor and fill the thing up to the top. I thought the part 2 number would be larger given how long it took to run. Anyway, got it done, on Christmas Eve. Probably won't be looking at the next one for a couple days.
